@@ -3,13 +3,6 @@
 #include<string.h>
 #include"../../include/utils.h"
 
-inline float* get_mat_space(index_t len);
-inline float* get_mat_space_sq(axis_t d);
-inline float** get_mat_space_2d(axis_t row, axis_t col);
-inline float** get_mat_space_sq_2d(axis_t d);
-inline void free_mat_space(float* m);
-inline void free_mat_space(float** m);
-
 inline float* get_mat_space(index_t len) {
     float* mat = new float [len];
     memset(mat, 0, sizeof(mat));
@@ -45,5 +38,8 @@ inline void free_mat_space(float** m) {
     }
     delete m;
 }
+
+void basic_matmul(float** A, float** B, float** C, axis_t p);
+void hilbert_matmul(float* A, float* B, float* C, axis_t p);
 
 #endif
