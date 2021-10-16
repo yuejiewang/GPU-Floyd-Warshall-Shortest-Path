@@ -69,7 +69,7 @@ int main(int argc, char** argv)
     basic_matmul(mat_A, mat_B, mat_C, pow);
     for (axis_t x = 0; x < N; x++) {
         for (axis_t y = 0; y < N; y++) {
-            printf("%5.1f ", mat_C[x][y]);
+            printf("%3.4f ", mat_C[x][y]);
         }
         printf("\n");
     }

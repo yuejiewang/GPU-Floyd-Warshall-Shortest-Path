@@ -17,6 +17,7 @@ int main(int argc, char** argv)
             unsigned int seed;
             sscanf(optarg, "%u", &seed);
             srand(seed);
+            printf("seed=%u\n", seed);
             break;
         case 'p':
             pstr = optarg;
