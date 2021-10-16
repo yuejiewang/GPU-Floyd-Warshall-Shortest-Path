@@ -15,7 +15,13 @@ int main()
 
     for (axis_t x = 0; x < N; x++) {
         for (axis_t y = 0; y < N; y++) {
-            printf("%5llu ", index2hilbert_2d(x, y, pow));
+            index_t hidx = index2hilbert_2d(x, y, pow);
+            printf("%5llu ", hidx);
+            index_2d idx = hilbert2index_2d(hidx, pow);
+            if (idx.row != x || idx.col != y) {
+                printf("reverse convert failed at %llu, %lu, %lu\n", hidx, idx.row, idx.col);
+                exit(1);
+            }
         }
         printf("\n");
     }
