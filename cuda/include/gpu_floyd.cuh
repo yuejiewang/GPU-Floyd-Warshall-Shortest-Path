@@ -2,13 +2,12 @@
 #define __GPU_FLOYD_CUH
 
 #include <cuda.h>
-#include<stdio.h>
-#include<stdlib.h>
-#include <limits>
-#define INF std::numeric_limits<float>::infinity()
+#include <stdio.h>
+#include <stdlib.h>
+#include <cmath>
 #define n_thread 32
 #define n_unroll 16
-#define get_index(x, y, s) (y* s + x)
+#define get_index(x, y, s) (y * s + x)
 #define div_up(x, y) ((x + y - 1) / y)
 #define CHK(x, info)                                                \
   {                                                                 \

@@ -3,6 +3,7 @@
 #include<string>
 #include<cstring>
 #include<string.h>
+#include"../../include/utils.h"
 #include"../include/gpu_floyd.cuh"
 
 int main(int argc, char** argv)
@@ -16,10 +17,13 @@ int main(int argc, char** argv)
   if (!ifile || !ofile)
     exit(1);
   unsigned int V, E;
-  fscanf(ifile, "%lu %lu\n", &V, &E);
+  fscanf(ifile, "%u\n", &V);
+  fscanf(ifile, "%u\n", &E);
   unsigned int* src = (unsigned int*)malloc(E * sizeof(unsigned int));
   unsigned int* dst = (unsigned int*)malloc(E * sizeof(unsigned int));
+  unsigned int* row = (unsigned int*)malloc(V * sizeof(unsigned int));
   float* w = (float*)malloc(E * sizeof(float));
+  /*
   for (unsigned int i = 0; i < E; i++) {
     fscanf(ifile, "%lu", &src[i]);
   }
@@ -29,18 +33,29 @@ int main(int argc, char** argv)
   for (unsigned int i = 0; i < E; i++) {
     fscanf(ifile, "%f", &w[i]);
   }
+  */
+  readcsr(ifile, w, dst, row, V, E);
+  csr2coo(src, row, V);
   float* D = gpu_floyd(src, dst, w, V, E);
   for (unsigned int i = 0; i < V; i++) {
     for (unsigned int j = 0; j < V; j++) {
-      if (D[get_index(i, j, V)] == INF) fprintf(ofile, "     INF ");
-      else fprintf(ofile, "%8.3f ", D[get_index(i, j, V)]);
+      if (D[get_index(j, i, V)] == INFINITY) {
+        // printf("   INF ");
+        fprintf(ofile, "   INF ");
+      }
+      else {
+        // printf("%6.2f ", D[get_index(i, j, V)]);
+        fprintf(ofile, "%6.2f ", D[get_index(j, i, V)]);
+      }
     }
+    // printf("\n");
     fprintf(ofile, "\n");
   }
   fclose(ifile);
   fclose(ofile);
   free(src);
   free(dst);
+  free(row);
   free(w);
   free(D);
   return 0;

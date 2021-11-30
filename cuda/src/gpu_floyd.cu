@@ -3,16 +3,16 @@
 
 __global__ void floyd_kernel(float* D, unsigned int V, unsigned int k) {
   // smem load
-  __shared__ float x_k[n_thread * n_unroll];
-  __shared__ float k_y[n_thread * n_unroll];
+  __shared__ float k_x[n_thread * n_unroll];
+  __shared__ float y_k[n_thread * n_unroll];
   unsigned int tid = blockDim.x * threadIdx.y + threadIdx.x;
   if (threadIdx.y < (n_thread / 2)) {
     if (blockIdx.x * n_thread * n_unroll + tid < V)
-      x_k[tid] = D[get_index(blockIdx.x * n_thread * n_unroll + tid, k, V)];
+      k_x[tid] = D[get_index((blockIdx.x * n_thread * n_unroll + tid), k, V)];
   } else {
     tid -= n_thread * n_unroll;
     if (blockIdx.y * n_thread * n_unroll + tid < V)
-      k_y[tid] = D[get_index(k, blockIdx.y * n_thread * n_unroll + tid, V)];
+      y_k[tid] = D[get_index(k, (blockIdx.y * n_thread * n_unroll + tid), V)];
   }
 
   __syncthreads();
@@ -23,15 +23,15 @@ __global__ void floyd_kernel(float* D, unsigned int V, unsigned int k) {
       if (blockDim.x * blockIdx.x * n_unroll + x * n_thread + threadIdx.x < V &&
           blockDim.y * blockIdx.y * n_unroll + y * n_thread + threadIdx.y < V &&
           D[get_index(
-              blockDim.x * blockIdx.x * n_unroll + x * n_thread + threadIdx.x,
-              blockDim.y * blockIdx.y * n_unroll + y * n_thread + threadIdx.y,
-              V)] > x_k[threadIdx.x + n_thread * x] +
-                        k_y[threadIdx.y + n_thread * y]) {
+              (blockDim.x * blockIdx.x * n_unroll + x * n_thread + threadIdx.x),
+              (blockDim.y * blockIdx.y * n_unroll + y * n_thread + threadIdx.y),
+              V)] > k_x[threadIdx.x + n_thread * x] +
+                        y_k[threadIdx.y + n_thread * y]) {
         D[get_index(
-            blockDim.x * blockIdx.x * n_unroll + x * n_thread + threadIdx.x,
-            blockDim.y * blockIdx.y * n_unroll + y * n_thread + threadIdx.y,
+            (blockDim.x * blockIdx.x * n_unroll + x * n_thread + threadIdx.x),
+            (blockDim.y * blockIdx.y * n_unroll + y * n_thread + threadIdx.y),
             V)] =
-            x_k[threadIdx.x + n_thread * x] + k_y[threadIdx.y + n_thread * y];
+            k_x[threadIdx.x + n_thread * x] + y_k[threadIdx.y + n_thread * y];
       }
     }
   }
@@ -43,8 +43,8 @@ __global__ void init_kernel(float* D, unsigned int V, float inf) {
 #pragma unroll
     for (unsigned int x = 0; x < n_unroll; x++) {
       D[get_index(
-          blockIdx.x * blockDim.x * n_unroll + x * n_thread + threadIdx.x,
-          blockIdx.y * blockDim.y * n_unroll + y * n_thread + threadIdx.y, V)] =
+          (blockIdx.x * blockDim.x * n_unroll + x * n_thread + threadIdx.x),
+          (blockIdx.y * blockDim.y * n_unroll + y * n_thread + threadIdx.y), V)] =
           inf;
     }
   }
@@ -52,9 +52,14 @@ __global__ void init_kernel(float* D, unsigned int V, float inf) {
 
 __global__ void const_kernel(unsigned int* src, unsigned int* dst, float* w,
                              float* D, unsigned int V) {
-  D[get_index(src[blockIdx.x * blockDim.x + threadIdx.x],
-              dst[blockIdx.x * blockDim.x + threadIdx.x], V)] =
+  D[get_index(dst[blockIdx.x * blockDim.x + threadIdx.x],
+              src[blockIdx.x * blockDim.x + threadIdx.x], V)] =
       w[blockIdx.x * blockDim.x + threadIdx.x];
+}
+
+__global__ void zero_kernel(float* D, unsigned int V) {
+  D[get_index((blockIdx.x * blockDim.x + threadIdx.x),
+              (blockIdx.x * blockDim.x + threadIdx.x), V)] = 0.0;
 }
 
 __host__ float* gpu_floyd(unsigned int* src, unsigned int* dst, float* w,
@@ -82,9 +87,11 @@ __host__ float* gpu_floyd(unsigned int* src, unsigned int* dst, float* w,
   dim3 g_conf(n_blocks, n_blocks);
 
   // initialize D (construct from src, dst, w) on GPU
-  CHK((init_kernel<<<g_conf, b_conf>>>(D, V, INF)), "initialization");
+  CHK((init_kernel<<<g_conf, b_conf>>>(D, V, INFINITY)), "initialization");
   CHK((const_kernel<<<div_up(E, 1024), 1024>>>(d_src, d_dst, d_w, D, V)),
       "construct");
+  unsigned int v_block = V < 1024 ? V : 1024;
+  CHK((zero_kernel<<<div_up(V, v_block), v_block>>>(D, V)), "zero");
 
   for (unsigned int i = 0; i < V; i++) {
     // one kernel for each interation of k
@@ -92,5 +99,9 @@ __host__ float* gpu_floyd(unsigned int* src, unsigned int* dst, float* w,
   }
   CHK(cudaMemcpy(hmem, D, V * V * sizeof(float), cudaMemcpyDeviceToHost),
       "cudaMemcpyD2H");
+  CHK(cudaFree(D), "freeD");
+  CHK(cudaFree(d_src), "freesrc");
+  CHK(cudaFree(d_dst), "freedst");
+  CHK(cudaFree(d_w), "freedist");
   return hmem;
 }
