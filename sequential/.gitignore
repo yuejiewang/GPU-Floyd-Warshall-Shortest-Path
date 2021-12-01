@@ -2,3 +2,6 @@ sequential_test
 seq_floyd
 convert
 output/
+include/seq_mat_mul.h
+include/utils.h
+test/

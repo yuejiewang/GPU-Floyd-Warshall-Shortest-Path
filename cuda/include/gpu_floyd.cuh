@@ -27,8 +27,8 @@ __global__ void init_kernel_unroll(float* D, unsigned int V, float inf);
 __global__ void const_kernel(unsigned int* src, unsigned int* dst, float* w,
                              float* D, unsigned int V);
 __host__ float* gpu_floyd(unsigned int* src, unsigned int* dst, float* w,
-                        unsigned int V, unsigned int E);
+                          unsigned int V, unsigned int E);
 __host__ float* gpu_floyd_shared(unsigned int* src, unsigned int* dst, float* w,
-                                unsigned int V, unsigned int E);
+                                 unsigned int V, unsigned int E);
 
 #endif

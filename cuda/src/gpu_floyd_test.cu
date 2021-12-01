@@ -1,21 +1,18 @@
-#include<stdlib.h>
-#include<stdio.h>
-#include<string>
-#include<cstring>
-#include<string.h>
-#include"../../include/utils.h"
-#include"../include/gpu_floyd.cuh"
+#include <stdlib.h>
+#include <stdio.h>
+#include <string>
+#include <cstring>
+#include <string.h>
+#include "../../include/utils.h"
+#include "../include/gpu_floyd.cuh"
 
-int main(int argc, char** argv)
-{
-  if (argc != 3)
-    exit(1);
+int main(int argc, char** argv) {
+  if (argc != 3) exit(1);
   char* ifile_name = argv[1];
   char* ofile_name = argv[2];
   FILE* ifile = fopen(ifile_name, "r");
   FILE* ofile = fopen(ofile_name, "w+");
-  if (!ifile || !ofile)
-    exit(1);
+  if (!ifile || !ofile) exit(1);
   unsigned int V, E;
   fscanf(ifile, "%u\n", &V);
   fscanf(ifile, "%u\n", &E);
@@ -32,8 +29,7 @@ int main(int argc, char** argv)
       if (D[get_index(j, i, V)] == INFINITY) {
         // printf("   INF ");
         fprintf(ofile, "   INF ");
-      }
-      else {
+      } else {
         // printf("%6.2f ", D[get_index(i, j, V)]);
         fprintf(ofile, "%6.2f ", D[get_index(j, i, V)]);
       }
