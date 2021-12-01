@@ -23,20 +23,10 @@ int main(int argc, char** argv)
   unsigned int* dst = (unsigned int*)malloc(E * sizeof(unsigned int));
   unsigned int* row = (unsigned int*)malloc(V * sizeof(unsigned int));
   float* w = (float*)malloc(E * sizeof(float));
-  /*
-  for (unsigned int i = 0; i < E; i++) {
-    fscanf(ifile, "%lu", &src[i]);
-  }
-  for (unsigned int i = 0; i < E; i++) {
-    fscanf(ifile, "%lu", &dst[i]);
-  }
-  for (unsigned int i = 0; i < E; i++) {
-    fscanf(ifile, "%f", &w[i]);
-  }
-  */
   readcsr(ifile, w, dst, row, V, E);
   csr2coo(src, row, V);
-  float* D = gpu_floyd(src, dst, w, V, E);
+  // float* D = gpu_floyd(src, dst, w, V, E);
+  float* D = gpu_floyd_shared(src, dst, w, V, E);
   for (unsigned int i = 0; i < V; i++) {
     for (unsigned int j = 0; j < V; j++) {
       if (D[get_index(j, i, V)] == INFINITY) {

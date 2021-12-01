@@ -1,13 +1,13 @@
 dir="/scratch/yw4989/GPU"
-for v in 512 1024 2048 4096
+for v in 8192 16384
 do
-  for d in 4 8 16 128
+  for d in 16 32
   do
     e=`expr $v \* $d`
     f="v${v}_e${e}.txt"
     echo ""
-    echo "./gpu_floyd ${dir}/data/$f ${dir}/gpu/$f"
-    time ./gpu_floyd ${dir}/data/$f ${dir}/gpu/$f
+    echo "./gpu_floyd ${dir}/data/large/$f ${dir}/gpu/$f"
+    time ./gpu_floyd ${dir}/data/large/$f ${dir}/gpu/$f
     # nvprof ./gpu_floyd ${dir}/data/$f ${dir}/gpu/$f
   done
 done

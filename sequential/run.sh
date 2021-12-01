@@ -1,11 +1,12 @@
-for v in 512 1024 #2048 4096 8192 16384
+dir="/scratch/yw4989/GPU"
+for v in 8192
 do
-  for d in 4 8 #16 32 128 256
+  for d in 16 32
   do
     e=`expr $v \* $d`
     f="v${v}_e${e}.txt"
     echo ""
-    echo "./seq_floyd ../data/$f output/$f"
-    time ./seq_floyd ../data/$f output/$f
+    echo "./seq_floyd ${dir}/data/$f ${dir}/seq/$f"
+    time ./seq_floyd ${dir}/data/$f ${dir}/seq/$f
   done
 done
